@@ -1,6 +1,7 @@
 const db = require("../models");
 const Tutorial = db.tutorials;
 const Comment = db.comments;
+const Tag = db.tag;
 const Op = db.Sequelize.Op;
 /*
 
@@ -72,7 +73,6 @@ exports.create = (req, res) => {
 };
 
 //Create and Save new Comments
-
 exports.createComment = (req, res) => {
 	const id = req.params.id
 	if (!id) {
@@ -99,6 +99,32 @@ exports.createComment = (req, res) => {
 	  });
 	});
 };
+
+// Create abd save new Tag
+exports.createTag = (req, res) => {
+	if (!req.body.name) {
+    res.status(400).send({
+      message: "Name can not be empty!"
+    });
+    return;
+  }
+  // Create a Tag
+  const tag = {
+		name: req.body.name,
+  }
+  // Save Tag in the database
+  Tag.create(tag)
+	.then((tag) => {
+		res.send(tag);
+	})
+	.catch(err => {
+	  res.status(500).send({
+		message:
+		  err.message || "Some error occurred while creating the Tag."
+	  });
+	});
+};
+
 
 // Retrieve all Tutorials from the database.
 exports.findAll = (req, res) => {
@@ -130,6 +156,35 @@ if (!condition) {
     });
 };
 
+
+// Retrieve all Tutorials from the database.
+exports.findAllTag = (req, res) => {
+  Tag.findAll({ 
+	include: [
+		{
+			model: Tutorial,
+			as: "tutorials",
+			attributes: ["id", "title"],
+      include: [
+        {
+          model: Comment,
+          as: "comments",
+          attributes: ["id", "name"]
+        }
+      ]
+		}
+	] })
+    .then(data => {
+      res.send(data);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving tags."
+      });
+    });
+};
+
 // Find a single Tutorial with an id
 exports.findOne = (req, res) => {
 	const id = req.params.id;
@@ -138,50 +193,49 @@ exports.findOne = (req, res) => {
 		  message: "No tutorial Id!"
 		});
 		return;
-	  }
-		Tutorial.findByPk(id, { 
-	  include: [
-			{
-				model: Comment,
-				as: "comments",
-				attributes: ["id", "name"]
-			}
-		],
-	  }
-	)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error retrieving Tutorial with id=" + id
-      });
+  }
+  Tutorial.findByPk(id, { 
+      include: [
+        {
+          model: Comment,
+          as: "comments",
+          attributes: ["id", "name"]
+        }
+      ],
+    }
+  )
+  .then(data => {
+    res.send(data);
+  })
+  .catch(err => {
+    res.status(500).send({
+      message: "Error retrieving Tutorial with id=" + id
     });
+  });
 };
 
 // Update a Tutorial by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
-
   Tutorial.update(req.body, {
     where: { id: id }
   })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Tutorial was updated successfully."
-        });
-      } else {
-        res.send({
-          message: `Cannot update Tutorial with id=${id}. Maybe Tutorial was not found or req.body is empty!`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error updating Tutorial with id=" + id
+  .then(num => {
+    if (num == 1) {
+      res.send({
+        message: "Tutorial was updated successfully."
       });
+    } else {
+      res.send({
+        message: `Cannot update Tutorial with id=${id}. Maybe Tutorial was not found or req.body is empty!`
+      });
+    }
+  })
+  .catch(err => {
+    res.status(500).send({
+      message: "Error updating Tutorial with id=" + id
     });
+  });
 };
 
 // Delete a Tutorial with the specified id in the request
