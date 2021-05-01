@@ -128,14 +128,14 @@ exports.createTag = (req, res) => {
 
 // Retrieve all Tutorials from the database.
 exports.findAll = (req, res) => {
-  const title = req.query.title;
+/*  const title = req.query.title;
   var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
 if (!condition) {
 		res.status(400).send({
 		  message: "No titre!"
 		});
 		return;
-	  }
+	  }*/
   Tutorial.findAll({ 
 	include: [
 		{
@@ -143,8 +143,7 @@ if (!condition) {
 			as: "comments",
 			attributes: ["id", "name"]
 		}
-	],
-	where: condition })
+	]})
     .then(data => {
       res.send(data);
     })

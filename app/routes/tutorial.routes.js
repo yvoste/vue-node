@@ -18,7 +18,7 @@ module.exports = app => {
   router.get("/", tutorials.findAll);
 
   // Retrieve all Tags
-  router.get("/tag/", tutorials.findAllTag);
+  router.get("/tag", tutorials.findAllTag);
 
   // Retrieve all published Tutorials
   router.get("/published", tutorials.findAllPublished);
