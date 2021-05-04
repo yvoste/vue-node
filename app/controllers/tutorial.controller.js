@@ -3,43 +3,20 @@ const Tutorial = db.tutorials;
 const Comment = db.comments;
 const Tag = db.tag;
 const Op = db.Sequelize.Op;
-/*
+const getPagination = (page, size) => {
+  const limit = size ? +size : 3;
+  const offset = page ? page * limit : 0;
 
+  return { limit, offset };
+};
+const getPagingData = (data, page, limit) => {
+  const { count: totalItems, rows: tutorials } = data;
+  const currentPage = page ? +page : 0;
+  const totalPages = Math.ceil(totalItems / limit);
 
-//Get the comments for a given tutorial
-
-exports.findTutorialById = (tutorialId) => {
-  return Tutorial.findByPk(tutorialId, { include: ["comments"] })
-    .then((tutorial) => {
-      return tutorial;
-    })
-    .catch((err) => {
-      console.log(">> Error while finding tutorial: ", err);
-    });
+  return { totalItems, tutorials, totalPages, currentPage };
 };
 
-//Get the comments for a given comment id
-
-exports.findCommentById = (id) => {
-  return Comment.findByPk(id, { include: ["tutorial"] })
-    .then((comment) => {
-      return comment;
-    })
-    .catch((err) => {
-      console.log(">> Error while finding comment: ", err);
-    });
-};
-
-//Get all Tutorials include comments
-
-exports.findAll = () => {
-  return Tutorial.findAll({
-    include: ["comments"],
-  }).then((tutorials) => {
-    return tutorials;
-  });
-};
-*/
 
 
 // Create and Save a new Tutorial
@@ -127,15 +104,8 @@ exports.createTag = (req, res) => {
 
 
 // Retrieve all Tutorials from the database.
+/*
 exports.findAll = (req, res) => {
-/*  const title = req.query.title;
-  var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
-if (!condition) {
-		res.status(400).send({
-		  message: "No titre!"
-		});
-		return;
-	  }*/
   Tutorial.findAll({ 
 	include: [
 		{
@@ -154,6 +124,70 @@ if (!condition) {
       });
     });
 };
+
+*/
+// Retrieve all Tutorials from the database with condition Title.
+
+  exports.findByTitle = (req, res) => {
+    const title = req.query.title;
+   console.log(title);
+    var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
+    if (!condition) {
+      res.status(400).send({
+        message: "No titre!"
+      });
+      return;
+      }
+    Tutorial.findAll({ 
+      where: condition,
+      include: [
+        {
+          model: Comment,
+          as: "comments",
+          attributes: ["id", "name"]
+        }
+      ]})
+      .then(data => {
+        res.send(data);
+      })
+      .catch(err => {
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while retrieving tutorials."
+        });
+      });
+  };
+  
+
+  // Retrieve all Tutorials from the database with Pagination.
+
+  exports.findAll = (req, res) => {
+    const {page, size} = req.query;
+    const {limit, offset} = getPagination(page, size);
+
+    Tutorial.findAndCountAll({ 
+      include: [
+        {
+          model: Comment,
+          as: "comments",
+          attributes: ["id", "name"]
+        }
+      ],
+      limit, 
+      offset,
+      })
+      .then(data => {
+        console.log(data);
+        const response = getPagingData(data, page, limit);
+        res.send(response);
+      })
+      .catch(err => {
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while retrieving tutorials."
+        });
+      });
+  };
 
 
 // Retrieve all Tutorials from the database.
@@ -316,11 +350,3 @@ exports.findAllPublished = (req, res) => {
     });
 };
 
-/*
-{
-    "totalItems": 8,
-    "tutorials": [...],
-    "totalPages": 3,
-    "currentPage": 1
-}
-*/

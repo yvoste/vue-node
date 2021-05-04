@@ -17,6 +17,9 @@ module.exports = app => {
   // Retrieve all Tutorials
   router.get("/", tutorials.findAll);
 
+   // Retrieve all Tags
+   router.get("/tit", tutorials.findByTitle);
+
   // Retrieve all Tags
   router.get("/tag", tutorials.findAllTag);
 
@@ -25,6 +28,8 @@ module.exports = app => {
 
   // Retrieve a single Tutorial with id
   router.get("/:id", tutorials.findOne);
+
+  
 
 
 
