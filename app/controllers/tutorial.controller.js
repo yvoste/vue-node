@@ -163,8 +163,7 @@ exports.findAll = (req, res) => {
 
   exports.findAll = (req, res) => {
     const {page, size} = req.query;
-    const {limit, offset} = getPagination(page, size);
-
+    const {limit, offset} = getPagination(page, size);    
     Tutorial.findAndCountAll({ 
       include: [
         {
@@ -173,6 +172,7 @@ exports.findAll = (req, res) => {
           attributes: ["id", "name"]
         }
       ],
+      where: null, //{published: 1}
       limit, 
       offset,
       })
@@ -350,3 +350,29 @@ exports.findAllPublished = (req, res) => {
     });
 };
 
+// Retrieve all Comments from the database by tutorial.
+
+exports.findComments = (req, res) => {
+  const id = req.query.id;
+  const tutorialId = id;
+	if (!id) {
+		res.status(400).send({
+		  message: "No tutorial Id!"
+		});
+		return;
+  }
+  console.log(id +'fsdfsdf');    
+  Comment.findAll({     
+    where: {tutorialId},
+    })
+    .then(data => {
+      console.log(data);      
+      res.send(data);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving comments."
+      });
+    });
+};
